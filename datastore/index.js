@@ -26,10 +26,23 @@ exports.create = (text, callback) => {
 
 exports.readAll = (callback) => {
   var data = [];
-  _.each(items, (text, id) => {
-    data.push({ id, text });
+  fs.readdir(exports.dataDir, (err, fileNamesArr) => {
+    if (err) {
+      console.log(err);
+    } else {
+      fileNamesArr.forEach((item) => {
+        let id = item.slice(0, item.length - 4);
+        data.push({
+          id: id,
+          text: id,
+        });
+      });
+      callback(null, data);
+    }
   });
-  callback(null, data);
+  // _.each(items, (text, id) => {
+  //   data.push({ id, text });
+  // });
 };
 
 exports.readOne = (id, callback) => {
