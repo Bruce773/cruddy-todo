@@ -66,13 +66,29 @@ exports.readOne = (id, callback) => {
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  fs.readdir(exports.dataDir, (err, fileNamesArr) => {
+    if (err) {
+      console.log(err);
+    } else {
+      fileNamesArr.forEach((item, index) => {
+        var fileId = item.slice(0, item.length - 4);
+        if (fileId === id) {
+          fs.writeFile(`${exports.dataDir}/${id}.txt`, text, (err) => {
+            if (err) {
+              // console.log(err);
+              callback(new Error(`No item with id: ${id}`));
+            } else {
+              callback(null, { id, text });
+            }
+          });
+        } else if (fileId !== id && index === fileNamesArr.length - 1) {
+          callback(new Error(`No item with id: ${id}`));
+        }
+      });
+      // callback(null, { id, text });
+      // callback(null, data);
+    }
+  });
 };
 
 exports.delete = (id, callback) => {
