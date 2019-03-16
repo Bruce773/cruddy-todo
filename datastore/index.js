@@ -1,7 +1,10 @@
 const fs = require('fs');
+var Promise = require('bluebird');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const promisifiedReadFile = Promise.promisify(fs.readFile);
+const promisifiedReadDir = Promise.promisify(fs.readdir);
 
 var items = {};
 
@@ -30,19 +33,31 @@ exports.readAll = (callback) => {
     if (err) {
       console.log(err);
     } else {
-      fileNamesArr.forEach((item) => {
-        let id = item.slice(0, item.length - 4);
-        data.push({
-          id: id,
-          text: id,
-        });
+      data = _.map(fileNamesArr, (item) => {
+        console.log('Items: ', item);
+        if (true) {
+          return promisifiedReadFile(`${exports.dataDir}/${item}`).then(
+            (result) => {
+              console.log('Result.toString()', result.toString());
+              return {
+                id: item.slice(0, item.length - 4),
+                text: result.toString(),
+              };
+            }
+          );
+        }
       });
-      callback(null, data);
+      // console.log(data);
+      Promise.all(data).then(
+        (result) => {
+          callback(null, result);
+        },
+        (err) => {
+          callback(err);
+        }
+      );
     }
   });
-  // _.each(items, (text, id) => {
-  //   data.push({ id, text });
-  // });
 };
 
 exports.readOne = (id, callback) => {
@@ -57,11 +72,6 @@ exports.readOne = (id, callback) => {
         text: `${fileData}`,
       });
     }
-    // var text;
-    // if (!text) {
-    // } else {
-    //   callback(null, { id, text });
-    // }
   });
 };
 
@@ -85,8 +95,6 @@ exports.update = (id, text, callback) => {
           callback(new Error(`No item with id: ${id}`));
         }
       });
-      // callback(null, { id, text });
-      // callback(null, data);
     }
   });
 };
@@ -111,8 +119,6 @@ exports.delete = (id, callback) => {
           callback(new Error(`No item with id: ${id}`));
         }
       });
-      // callback(null, { id, text });
-      // callback(null, data);
     }
   });
 };
